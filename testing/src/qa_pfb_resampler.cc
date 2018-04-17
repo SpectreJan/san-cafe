@@ -106,7 +106,7 @@ int test_1()
     }
   }
 
-  std::cout << "All checks passed\n";
+  std::cout << "All Resampler checks passed\n";
 
   return result;
 }

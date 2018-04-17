@@ -9,9 +9,16 @@ int main()
 {
   std::cout << "Starting Test of SAN-CAFE" << std::endl;
 
-  //pfb_resampler::test_1();
-  std::cout << "\n\n\n";
-  pfb_channelizer::test_1();
+  int result = 0;
+  result |= pfb_resampler::test_1();
+  std::cout << "\n";
+  result |= pfb_channelizer::test_1();
 
-  return 0;
+  if(!result) {
+    std::cout << "All checks have passed\n";
+  } else {
+    std::cout << "Some checks failed\n";
+  }
+
+  return result;
 }

@@ -76,8 +76,6 @@ int test_1()
   int samples_produced =
       channelizer->filter(&i_samples[0], &result_vec[0], 512*34);
 
-  std::cout << samples_produced << " samples produced\n";
-
    for (unsigned int c = 0; c < num_filters; ++c) {
     std::complex<float> *channel_ptr = &result_vec[c * samples_produced];
 
@@ -92,7 +90,7 @@ int test_1()
     }
   }
 
-  std::cout << "\n";
+  std::cout << "All Channelizer checks passed\n";
 
   int result = 0;
   return result;
