@@ -77,7 +77,7 @@ pfb_channelizer_ccf::~pfb_channelizer_ccf()
   cufftDestroy(_fft_plan);
 
   if (_fft_out != nullptr) {
-    free(_fft_out);
+    cudaFree(_fft_out);
     _fft_out = nullptr;
   }
 }
@@ -254,7 +254,7 @@ int pfb_channelizer_ccf::filter(std::complex<float> *input,
     }
 
     // Copy the samples back to host
-    cudaMemcpy(_fft_out, _fft_outbuffer.get(),
+    cudaMemcpy(output, _fft_outbuffer.get(),
                _pfb_produce * _num_channels * sizeof(float2),
                cudaMemcpyDeviceToHost);
 

@@ -1,8 +1,8 @@
 /******************************************************************************
-* qa_pfb_resampler.h
-* Header file for QA Test of the PFB Resampler
+* qa_pfb_channelizer.h
+* Header file for QA Test of the PFB Channelizer
 *
-* Copyright {C} {2018}, {Jan Kraemer, DLR}
+* Copyright {C} {2018}, {Jan Kraemer}
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU Lesser General Public License as published by
@@ -18,20 +18,21 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 ******************************************************************************/
-#ifndef QA_PFB_RESAMPLER_H
-#define QA_PFB_RESAMPLER_H
+#ifndef QA_PFB_CHANNELIZER_H
+#define QA_PFB_CHANNELIZER_H
 #include <complex>
 #include <string>
 #include <vector>
 
-namespace pfb_resampler
+namespace pfb_channelizer
 {
 const std::string test_dir("@CAFE_TEST_DIR@");
 
-void resize_input_vector(std::vector<std::complex<float>> &vec,
-                         unsigned int factor);
+void read_output_samples(
+    std::vector<std::vector<std::complex<float>>> &sample_vec,
+    std::vector<std::string> &sample_files);
 
 int test_1();
 
-} /* namespace resampler */
-#endif /* QA_PFB_RESAMPLER_H */
+} /* namespace channelizer */
+#endif /* QA_PFB_CHANNELIZER_H */

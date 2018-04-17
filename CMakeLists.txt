@@ -35,8 +35,13 @@ configure_file (
     "${CMAKE_CURRENT_BINARY_DIR}/testing/include/cafe/testing/qa_pfb_resampler.h"
 )
 
+configure_file (
+    "${CMAKE_CURRENT_SOURCE_DIR}/testing/include/cafe/testing/qa_pfb_channelizer.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/testing/include/cafe/testing/qa_pfb_channelizer.h"
+)
 list(APPEND cafe_test_srcs
     ${CMAKE_CURRENT_SOURCE_DIR}/testing/src/test_san_cafe.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/testing/src/qa_pfb_channelizer.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/testing/src/qa_pfb_resampler.cc)
 
 include_directories(
