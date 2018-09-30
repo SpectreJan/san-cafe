@@ -1,12 +1,13 @@
 #include <cafe_constants.h>
 #include <stream_to_streams.h>
 
-__global__ void stream_to_streams(float2 *in, float2 *out)
+__global__ void stream_to_streams(float2 *in, float2 *out,
+    int channel_size, int history)
 {
   int id = blockIdx.x * blockDim.x * blockDim.y + threadIdx.y * blockDim.x +
            threadIdx.x;
-  out[threadIdx.x * (gridDim.x * blockDim.y + 32) + blockIdx.x * blockDim.y +
-      threadIdx.y + 5] = in[id];
+  out[threadIdx.x * (channel_size) + blockIdx.x * blockDim.y +
+      threadIdx.y + history] = in[id];
 }
 
 __global__ void streams_to_stream(float2 *in, float2 *out)

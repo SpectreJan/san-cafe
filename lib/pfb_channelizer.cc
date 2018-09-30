@@ -108,6 +108,7 @@ void pfb_channelizer_ccf::set_filters(const std::vector<float> &taps,
   }
 
   _num_taps_per_filter = num_taps_per_filter;
+  _history = num_taps_per_filter - 1;
   std::cout << _num_taps_per_filter << " taps per filter with " << taps.size()
             << " taps overall\n";
 }
@@ -186,8 +187,11 @@ void pfb_channelizer_ccf::set_grid()
   _cuda_shared_mem_size =
       (samples_per_tb + _num_taps_per_filter) * sizeof(float) * 2;
   int extra_mem = std::ceil((_cuda_config.shuffle_blockdim_y + _num_taps_per_filter - 1) / 32) - 1;
-  _cuda_buffer_len =
-      (grid * (_cuda_config.shuffle_blockdim_y + 1)) * _num_channels;
+  _channel_size =
+      grid * (_cuda_config.shuffle_blockdim_y + 1);
+  _cuda_buffer_len = _channel_size * _num_channels;
+  _input_size = grid * _cuda_config.shuffle_blockdim_y;
+
 
   std::cout << "Cuda Buffer Len = " << _cuda_buffer_len << std::endl;
 }
@@ -231,7 +235,7 @@ int pfb_channelizer_ccf::filter(std::complex<float> *input,
                                 std::complex<float> *output,
                                 unsigned int num_samples)
 {
-  const int stream_len = _pfb_produce * _num_channels;
+  const int stream_len = _input_size * _num_channels;
 
   // Copy the input data to the device
   cudaError err =
@@ -245,6 +249,7 @@ int pfb_channelizer_ccf::filter(std::complex<float> *input,
   // Execute the PFB operation
   cuda::pfb_execute(_g_instream.get(), _g_instreams.get(),
                     _fft_inbuffer.get(), _fft_outbuffer.get(), &_cuda_config,
+                    _channel_size, _history,
                     _cuda_shared_mem_size);
 
   // Despin the samples via the CUDA FFT

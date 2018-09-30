@@ -36,7 +36,10 @@ class pfb_channelizer_ccf
   int _num_channels;         //! Number of channels to be extracted
   int _oversampling;         //! Oversampling factor of output
   int _num_taps_per_filter;  //! Number of taps per channel
-  int _cuda_buffer_len;      //! Length of the output buffer
+  int _cuda_buffer_len;      //! Length of the input buffer
+  int _channel_size;         //! Buffer length of one channel
+  int _input_size;           //! Size of the input signal
+  int _history;
 
   // Grid variables
   enum { _warp_size = 32 };   //! Compile time constant Warp Size
