@@ -126,9 +126,9 @@ void pfb_channelizer_ccf::set_streams()
   _g_instreams =
       cafe::create_cuda_unique_ptr(_cuda_buffer_len * sizeof(float) * 2);
   _fft_inbuffer = cafe::create_cuda_unique_ptr(
-      _num_channels * (_pfb_produce + 2) * sizeof(float2));
+      _num_channels * (_pfb_produce + 32) * sizeof(float2));
   _fft_outbuffer = cafe::create_cuda_unique_ptr(
-      _num_channels * (_pfb_produce + 2) * sizeof(float2));
+      _num_channels * (_pfb_produce + 32) * sizeof(float2));
 
   cudaMemset(reinterpret_cast<void*>(_g_instreams.get()),
       0, (_cuda_buffer_len * sizeof(float) * 2));
@@ -185,9 +185,9 @@ void pfb_channelizer_ccf::set_grid()
   _samples_to_process = _cuda_config.fb_blockdim_x * _cuda_config.fb_griddim.y;
   _cuda_shared_mem_size =
       (samples_per_tb + _num_taps_per_filter) * sizeof(float) * 2;
-  int history = _p_taps.size() - _num_channels;
+  int extra_mem = std::ceil((_cuda_config.shuffle_blockdim_y + _num_taps_per_filter - 1) / 32) - 1;
   _cuda_buffer_len =
-      (grid * _cuda_config.shuffle_blockdim_y) * _num_channels + history;
+      (grid * (_cuda_config.shuffle_blockdim_y + 1)) * _num_channels;
 
   std::cout << "Cuda Buffer Len = " << _cuda_buffer_len << std::endl;
 }
@@ -231,37 +231,33 @@ int pfb_channelizer_ccf::filter(std::complex<float> *input,
                                 std::complex<float> *output,
                                 unsigned int num_samples)
 {
-  const int stream_len = _cuda_buffer_len - _p_taps.size();
-  const int num_chunks = (const int)std::floor(num_samples / stream_len);
+  const int stream_len = _pfb_produce * _num_channels;
 
-  for (int i = 0; i < num_chunks; ++i) {
-    // Copy the input data to the device
-    cudaError err =
-        cudaMemcpy(_g_instream.get(), input, stream_len * sizeof(float2),
-                   cudaMemcpyHostToDevice);
+  // Copy the input data to the device
+  cudaError err =
+      cudaMemcpy(_g_instream.get(), input, stream_len * sizeof(float2),
+                 cudaMemcpyHostToDevice);
 
-    if (err != cudaSuccess) {
-      std::cout << "Error copying input to GPU\n";
-    }
-
-    // Execute the PFB operation
-    cuda::pfb_execute(_g_instream.get(), _g_instreams.get(),
-                      _fft_inbuffer.get(), _fft_outbuffer.get(), &_cuda_config,
-                      _cuda_shared_mem_size);
-
-    // Despin the samples via the CUDA FFT
-    int ret = cufftExecC2C(_fft_plan, _fft_inbuffer.get(), _fft_outbuffer.get(),
-                           CUFFT_INVERSE);
-    if (ret) {
-      return 0;
-    }
-
-    // Copy the samples back to host
-    cudaMemcpy(output, _fft_outbuffer.get(),
-               _pfb_produce * _num_channels * sizeof(float2),
-               cudaMemcpyDeviceToHost);
-
+  if (err != cudaSuccess) {
+    std::cout << "Error copying input to GPU\n";
   }
+
+  // Execute the PFB operation
+  cuda::pfb_execute(_g_instream.get(), _g_instreams.get(),
+                    _fft_inbuffer.get(), _fft_outbuffer.get(), &_cuda_config,
+                    _cuda_shared_mem_size);
+
+  // Despin the samples via the CUDA FFT
+  int ret = cufftExecC2C(_fft_plan, _fft_inbuffer.get(), _fft_outbuffer.get(),
+                         CUFFT_INVERSE);
+  if (ret) {
+    return 0;
+  }
+
+  // Copy the samples back to host
+  cudaMemcpy(output, _fft_outbuffer.get(),
+             _pfb_produce * _num_channels * sizeof(float2),
+             cudaMemcpyDeviceToHost);
 
   return _pfb_produce;
 }

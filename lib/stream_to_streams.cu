@@ -5,7 +5,7 @@ __global__ void stream_to_streams(float2 *in, float2 *out)
 {
   int id = blockIdx.x * blockDim.x * blockDim.y + threadIdx.y * blockDim.x +
            threadIdx.x;
-  out[threadIdx.x * (gridDim.x * blockDim.y + 5) + blockIdx.x * blockDim.y +
+  out[threadIdx.x * (gridDim.x * blockDim.y + 32) + blockIdx.x * blockDim.y +
       threadIdx.y + 5] = in[id];
 }
 

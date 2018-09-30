@@ -64,7 +64,7 @@ __global__ void filterbank_execute(float2 *in, float2 *out)
         in[offset * blockIdx.x + start_offset + threadIdx.x];
   }
 
-  /*if(blockIdx.x == 2 && blockIdx.y == 0 && threadIdx.x == 0 && threadIdx.y == 0)*/
+  /*if(blockIdx.x == 0 && blockIdx.y == 0 && threadIdx.x == 0 && threadIdx.y == 0)*/
   /*{*/
   /*  printf("%f %f\n"*/
   /*      "%f %f\n"*/
@@ -102,6 +102,13 @@ __global__ void filterbank_execute(float2 *in, float2 *out)
   out[fft_pos +
       gridDim.x * (threadIdx.y + threadIdx.x * blockDim.y +
                    blockIdx.y * blockDim.x * blockDim.y)] = result;
+
+  // Copy the history to global memory
+  if (threadIdx.y == 0 && blockIdx.y == 0 && threadIdx.x < num_taps) {
+    in[blockIdx.x * offset + threadIdx.x] =
+        in[offset * blockIdx.x + 512 + threadIdx.x];
+  }
+
 }
 
 __global__ void filterbank_no_os_execute(float2 *in, float2 *out)
