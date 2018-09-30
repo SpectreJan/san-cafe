@@ -267,4 +267,10 @@ int pfb_channelizer_ccf::filter(std::complex<float> *input,
   return _pfb_produce;
 }
 
+void pfb_channelizer_ccf::reset_history()
+{
+  cudaMemset(reinterpret_cast<void*>(_g_instreams.get()),
+      0, (_cuda_buffer_len * sizeof(float) * 2));
+}
+
 } /* Namespace filter */

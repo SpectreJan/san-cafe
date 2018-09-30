@@ -135,6 +135,11 @@ class pfb_channelizer_ccf
    ***************************************************************************/
   int filter(std::complex<float> *input, std::complex<float> *output,
              unsigned int num_samples);
+
+  /*****************************************************************************/ /*!
+   * @brief Sets History of the filter to zero
+   ***************************************************************************/
+  void reset_history();
 };
 
 }  // Namespace filter
