@@ -90,11 +90,6 @@ int test_1()
         return -1;
       }
     }
-    //
-    //for(int i = 507; i < 512; ++i) {
-    //  std::cout << channel_ptr[i] << " vs " << o_samples_vec[c][i+513] << std::endl;
-    //  //std::cout << i_samples[i*32+507*32] << std::endl;
-    //}
   }
 
   std::cout << "All Channelizer checks passed\n";
