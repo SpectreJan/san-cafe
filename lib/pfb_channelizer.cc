@@ -129,6 +129,9 @@ void pfb_channelizer_ccf::set_streams()
       _num_channels * (_pfb_produce + 2) * sizeof(float2));
   _fft_outbuffer = cafe::create_cuda_unique_ptr(
       _num_channels * (_pfb_produce + 2) * sizeof(float2));
+
+  cudaMemset(reinterpret_cast<void*>(_g_instreams.get()),
+      0, (_cuda_buffer_len * sizeof(float) * 2));
 }
 
 void pfb_channelizer_ccf::set_grid()
@@ -165,16 +168,13 @@ void pfb_channelizer_ccf::set_grid()
   // Expand the grid, so we shuffle more input sample than we process
   // in the filterbank. But this ensures an even grid distribution
   // int filter_hist = (_nTapsPerFilter) * _num_channels;
-  int additional_blocks =
-      ceil(1.0 * (_num_taps_per_filter - 1) / default_sh_grid_dim);
-  int expanded_grid =
-      additional_blocks + default_sh_grid_dim * sh_grid_mulitplicator;
+  int grid = default_sh_grid_dim * sh_grid_mulitplicator;
 
   //#if DEBUG_PRINT
-  std::cout << "Expanded Grid set to " << expanded_grid << " entries\n";
+  std::cout << "Expanded Grid set to " << grid << " entries\n";
   //#endif
 
-  _cuda_config.shuffle_griddim = expanded_grid;
+  _cuda_config.shuffle_griddim = grid;
   _cuda_config.shuffle_blockdim_y = 16;
   _cuda_config.shuffle_blockdim_x = _num_channels;
 
@@ -185,8 +185,11 @@ void pfb_channelizer_ccf::set_grid()
   _samples_to_process = _cuda_config.fb_blockdim_x * _cuda_config.fb_griddim.y;
   _cuda_shared_mem_size =
       (samples_per_tb + _num_taps_per_filter) * sizeof(float) * 2;
+  int history = _p_taps.size() - _num_channels;
   _cuda_buffer_len =
-      (expanded_grid * _cuda_config.shuffle_blockdim_y) * _num_channels;
+      (grid * _cuda_config.shuffle_blockdim_y) * _num_channels + history;
+
+  std::cout << "Cuda Buffer Len = " << _cuda_buffer_len << std::endl;
 }
 
 void pfb_channelizer_ccf::set_constant_symbols()
@@ -228,13 +231,13 @@ int pfb_channelizer_ccf::filter(std::complex<float> *input,
                                 std::complex<float> *output,
                                 unsigned int num_samples)
 {
-  const int num_chunks = (const int)std::floor(num_samples / _cuda_buffer_len);
-  unsigned int produced = 0;
+  const int stream_len = _cuda_buffer_len - _p_taps.size();
+  const int num_chunks = (const int)std::floor(num_samples / stream_len);
 
   for (int i = 0; i < num_chunks; ++i) {
     // Copy the input data to the device
     cudaError err =
-        cudaMemcpy(_g_instream.get(), input, _cuda_buffer_len * sizeof(float2),
+        cudaMemcpy(_g_instream.get(), input, stream_len * sizeof(float2),
                    cudaMemcpyHostToDevice);
 
     if (err != cudaSuccess) {
@@ -258,19 +261,9 @@ int pfb_channelizer_ccf::filter(std::complex<float> *input,
                _pfb_produce * _num_channels * sizeof(float2),
                cudaMemcpyDeviceToHost);
 
-    // Shuffle the data to the correct channel output buffer
-    // for (int k = 0; k < _num_channels; ++k) {
-    //    out = (complex_float*) outputSamples[k];
-    //
-    //    for (int j = 0; j < resamplerOut; ++j) {
-    //      out[j+produced] = _resamplerOut[k*resamplerOut+j];
-    //    }
-    // }
-
-    produced += _pfb_produce;
   }
 
-  return produced;
+  return _pfb_produce;
 }
 
 } /* Namespace filter */

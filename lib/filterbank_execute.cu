@@ -1,4 +1,5 @@
 #include <filterbank_execute.h>
+#include <stdio.h> 
 
 #define MAX_FILTER_SIZE 4096
 
@@ -62,6 +63,22 @@ __global__ void filterbank_execute(float2 *in, float2 *out)
     delay_line[threadIdx.x] =
         in[offset * blockIdx.x + start_offset + threadIdx.x];
   }
+
+  /*if(blockIdx.x == 2 && blockIdx.y == 0 && threadIdx.x == 0 && threadIdx.y == 0)*/
+  /*{*/
+  /*  printf("%f %f\n"*/
+  /*      "%f %f\n"*/
+  /*      "%f %f\n"*/
+  /*      "%f %f\n"*/
+  /*      "%f %f\n"*/
+  /*      "%f %f\n",*/
+  /*      in[blockIdx.x * offset + 0].x, in[blockIdx.x*offset + 0].y,*/
+  /*      in[blockIdx.x * offset + 1].x, in[blockIdx.x*offset + 1].y,*/
+  /*      in[blockIdx.x * offset + 2].x, in[blockIdx.x*offset + 2].y,*/
+  /*      in[blockIdx.x * offset + 3].x, in[blockIdx.x*offset + 3].y,*/
+  /*      in[blockIdx.x * offset + 4].x, in[blockIdx.x*offset + 4].y,*/
+  /*      in[blockIdx.x * offset + 5].x, in[blockIdx.x*offset + 5].y);*/
+  /*}*/
 
   if (threadIdx.x < num_taps) {
     delay_line[blockDim.x + threadIdx.x] =

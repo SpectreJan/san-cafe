@@ -10,8 +10,8 @@ int main()
   std::cout << "Starting Test of SAN-CAFE" << std::endl;
 
   int result = 0;
-  result |= pfb_resampler::test_1();
-  std::cout << "\n";
+  //result |= pfb_resampler::test_1();
+  //std::cout << "\n";
   result |= pfb_channelizer::test_1();
 
   if(!result) {

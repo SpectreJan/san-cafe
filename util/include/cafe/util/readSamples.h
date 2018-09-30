@@ -54,7 +54,7 @@ readComplexSamples(const std::string &fileName, std::vector<std::complex<T>> &sa
 template<typename T>
 int readBinarySamples(const std::string &fileName, std::vector<T> &samples)
 {
-  std::cout << "Opening file " << fileName << "\n";
+  //std::cout << "Opening file " << fileName << "\n";
   std::ifstream sampleFile(fileName, std::ios_base::in | std::ios_base::binary);
 
   if(!sampleFile.is_open()) {
@@ -72,9 +72,7 @@ int readBinarySamples(const std::string &fileName, std::vector<T> &samples)
 
   sampleFile.read((char*)samples.data(), length);
 
-  if(sampleFile)
-    std::cout << "Success:: Samples read correctly\n";
-  else
+  if(!sampleFile)
     std::cout << "Error: Could not read the samples\n";
 
   sampleFile.close();
